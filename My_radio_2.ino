@@ -57,8 +57,10 @@ int state=0;
 //Define the user configurable settings
 volatile byte volume=63; //Start at 100% Volume
 volatile int frequency=8850; //Start at 100.3MHz
+//volatile int frequency=8850; //Start at 100.3MHz
 //volatile int frequency=980; //Start at 980 kHz
-int oldfrequency = frequency;
+volatile int oldfrequency, oldfrequencyAM = 980;
+volatile int oldfrequencyFM = 8850;
 
 unsigned long oldfrequencyT, dwellT, backlightT, backlightdwellT, currentT;
 
@@ -279,14 +281,16 @@ void switchBand() {
   clearLine1();
   Serial.print("Switching to ");
   if(mode==AM){ 
+          oldfrequencyAM = frequency;
           mode=FM;
           Serial.print("FM");
-          frequency=8850;
+          frequency = oldfrequencyFM;
   }
   else{ 
+          oldfrequencyFM = frequency;
           mode=AM;
           Serial.print("AM"); 
-          frequency=680;
+          frequency = oldfrequencyAM;
   }
   delay(250);  
   radio.begin(mode);	
