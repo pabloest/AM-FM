@@ -105,8 +105,8 @@ void setup()
         backlight = true;
 	delay(500);
 	goTo(0);
-	Serial.print("-=ArduinoRadio=-");
-	showFREQ();
+//	Serial.print("-=ArduinoRadio=-");
+//	showFREQ();
 
         //Configure the radio
 	radio.begin(mode);
@@ -117,19 +117,19 @@ void setup()
 	lastUpdate = millis();
         backlightT = lastUpdate;
 	radioText_pos = 0;
+        delay(50);
+        showFREQ();
+        delay(50);
 }
 
 //#####################################################################
 //                            LOOPING
 //#####################################################################
 void loop()
-{       	     
-        //Update and store the RDS information
-	ps_rdy=radio.readRDS(); 
-	radio.getRDS(&tuned); 
-        
+{       	             
         bouncer.update();
         int value = bouncer.read();
+        
         if (value == HIGH) {
           if (!backlight) {
             backlightOn();
@@ -144,6 +144,7 @@ void loop()
         
         if(frequency != oldfrequency) {
           unsigned long frequencyT = millis();
+          clearLine2();
           if (!backlight) {
             backlightOn();
             delay(20);
@@ -154,17 +155,25 @@ void loop()
             backlightT = millis();
           }
           
-          showFREQ();
           if ( (frequencyT - oldfrequencyT) > dwellT) {
             oldfrequency = frequency;
             oldfrequencyT = frequencyT;
             radio.tuneFrequency(frequency);
+            delay(20);
+            goTo(16);
+            showCALLSIGN();
           }
+          showFREQ();
         }
         
         if (backlight) {
-          goTo(16);
+          
+          //Update and store the RDS information 
+      	  ps_rdy=radio.readRDS(); //source of audio noise?
+      	  radio.getRDS(&tuned);
+//          goTo(16);
           currentT = millis();
+//          showCALLSIGN();
           if ( (currentT - backlightT) > backlightdwellT) {
             goTo(16);
             backlightT = currentT;
@@ -174,7 +183,7 @@ void loop()
         }
 //        showPTY();
 //        showRadioText();
-        showCALLSIGN();
+//        showCALLSIGN();
 }
 
 
@@ -240,12 +249,12 @@ void showCALLSIGN(){
   String Stationcallstring;
   Stationcallstring = String(Stationcall);
 
-  if (Stationcallstring != "UNKN") {
+  if (Stationcallstring != "UNKN" && Stationcallstring != "") {
       Serial.print("Station: ");
       Serial.print(Stationcall);
       Serial.print("   ");
   }
-  else Serial.print("                ");
+//  else Serial.print("                ");
 }
 
 //----------------------------------------------------------------------
