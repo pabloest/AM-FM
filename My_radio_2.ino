@@ -133,7 +133,7 @@ void loop()
         if (value == HIGH) {
           if (!backlight) {
             backlightOn();
-            delay(20);
+            delay(10);
             backlight = true;
             backlightT = millis();
           }
@@ -147,7 +147,7 @@ void loop()
           clearLine2();
           if (!backlight) {
             backlightOn();
-            delay(20);
+            delay(10);
             backlight = true;
             backlightT = millis();
           }
@@ -159,7 +159,7 @@ void loop()
             oldfrequency = frequency;
             oldfrequencyT = frequencyT;
             radio.tuneFrequency(frequency);
-            delay(20);
+            delay(10);
             goTo(16);
             showCALLSIGN();
           }
@@ -414,9 +414,13 @@ void isr_2(){                                              // Pin2 went LOW
     if(digitalRead(3) == LOW && halfleft == true){         // <--
       halfleft = false;      // One whole click counter-
       if (mode==FM) {
+        if (frequency <= 8750) { frequency = 10810; }
         frequency-=20;                                            // clockwise
       }
-      else frequency-=10;
+      else { 
+        if (frequency <= 550) { frequency = 1760; }
+        frequency-=10;
+      }
     }
   }
 }
@@ -429,9 +433,13 @@ void isr_3(){                                             // Pin3 went LOW
     if(digitalRead(2) == LOW && halfright == true){       // -->
       halfright = false;      // One whole click clockwise
       if (mode==FM) {
+        if (frequency >= 10790) { frequency = 8730; }
         frequency+=20;
       }
-      else frequency+=10;
+      else {
+        if (frequency >=1750) { frequency = 540; }
+        frequency+=10;
+      }
     }
   }
 }
