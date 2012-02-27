@@ -56,11 +56,11 @@ int state=0;
 
 //Define the user configurable settings
 volatile byte volume=63; //Start at 100% Volume
-volatile int frequency=8850; //Start at 100.3MHz
+volatile int frequency=9170; //Start at 100.3MHz
 //volatile int frequency=8850; //Start at 100.3MHz
 //volatile int frequency=980; //Start at 980 kHz
 volatile int oldfrequency, oldfrequencyAM = 980;
-volatile int oldfrequencyFM = 8850;
+volatile int oldfrequencyFM = 9170;
 
 unsigned long oldfrequencyT, dwellT, backlightT, backlightdwellT, currentT;
 
@@ -73,6 +73,7 @@ char ps_prev[9]; //previous ps
 char pty_prev[17]="                ";
 byte mode=FM; //mode 0 is FM, mode 1 is AM
 //byte mode=AM; //mode 0 is FM, mode 1 is AM
+int RDBSattempts = 3;
 
 unsigned long lastUpdate; //Scrolling Refresh Parameter
 byte radioText_pos; //Scrolling Position
@@ -96,7 +97,7 @@ void setup()
         
         pinMode(PB, INPUT);
         
-        dwellT = 600;
+        dwellT = 400;            // time to wait before trying to tune to new frequency and after knob has been turned
         backlightdwellT = 10000; // LCD backlight dims after 10 seconds of inactivity
         oldfrequencyT = 0;
 
@@ -117,19 +118,26 @@ void setup()
 	lastUpdate = millis();
         backlightT = lastUpdate;
 	radioText_pos = 0;
-        delay(50);
+        delay(10);
         showFREQ();
-        delay(50);
+        for (int i=0; i<RDBSattempts; i++) { 
+          ps_rdy=radio.readRDS();
+          delay(5);
+          radio.getRDS(&tuned);
+        }
+        showCALLSIGN();
 }
 
 //#####################################################################
 //                            LOOPING
 //#####################################################################
 void loop()
-{       	             
+{       
+        // check if the mode change button was pressed
         bouncer.update();
         int value = bouncer.read();
         
+        // when mode change button is pressed, do this:
         if (value == HIGH) {
           if (!backlight) {
             backlightOn();
@@ -142,48 +150,51 @@ void loop()
           }
         }
         
-        if(frequency != oldfrequency) {
+        // when tuning knob is turned and frequency variable changed, do this:
+        if(frequency != oldfrequency) { 
+          // record the timestamp when the knob was turned 
           unsigned long frequencyT = millis();
-          clearLine2();
-          if (!backlight) {
+          clearLine2(); // clear any previous station callsign when knob is turned
+          if (!backlight) { // if the backlight was off, turn it on so user can see the new freq
             backlightOn();
             delay(10);
             backlight = true;
             backlightT = millis();
           }
-          else if (backlight) {
+          else if (backlight) { // if backlight is on, record time of last knob turn to reset backlight countdown timer
             backlightT = millis();
           }
           
+          // when time of last frequency change is > dwell time, do this:
           if ( (frequencyT - oldfrequencyT) > dwellT) {
-            oldfrequency = frequency;
-            oldfrequencyT = frequencyT;
-            radio.tuneFrequency(frequency);
-            delay(10);
-            goTo(16);
-            showCALLSIGN();
-          }
+            oldfrequency = frequency; // record the frequency and store it as the "latest" frequency
+            oldfrequencyT = frequencyT; // record timestamp of "latest" tuned frequency
+            radio.tuneFrequency(frequency); // tune to the new frequency
+            
+            if (mode == FM) {
+              // refresh the RDBS because it changed due to frequency change
+              //try n times to get the RDBS
+              for (int i=0; i<RDBSattempts; i++) { 
+                ps_rdy=radio.readRDS();
+                delay(5);
+                radio.getRDS(&tuned);
+              }
+              delay(10);
+              goTo(16);
+              showCALLSIGN();
+            }
+          } // end tuning 
           showFREQ();
         }
         
         if (backlight) {
-          
-          //Update and store the RDS information 
-      	  ps_rdy=radio.readRDS(); //source of audio noise?
-      	  radio.getRDS(&tuned);
-//          goTo(16);
           currentT = millis();
-//          showCALLSIGN();
           if ( (currentT - backlightT) > backlightdwellT) {
-            goTo(16);
             backlightT = currentT;
             backlightOff();
             backlight = false;
           }
         }
-//        showPTY();
-//        showRadioText();
-//        showCALLSIGN();
 }
 
 
@@ -301,7 +312,7 @@ void switchBand() {
           Serial.print("AM"); 
           frequency = oldfrequencyAM;
   }
-  delay(250);  
+  delay(250);    
   radio.begin(mode);	
   delay(100);
   radio.tuneFrequency(frequency);
