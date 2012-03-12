@@ -100,7 +100,7 @@ void setup()
         Serial.begin(9600);
         delay(50);
 	//Setup the LCD display and print the initial settings
-	backlightOn();
+//	backlightOn();
         backlight = true;
 	delay(100);
 	goTo(0);
@@ -125,6 +125,7 @@ void setup()
           radio.getRDS(&tuned);
         }
         showCALLSIGN();
+        backlightOn();
 }
 
 //#####################################################################
