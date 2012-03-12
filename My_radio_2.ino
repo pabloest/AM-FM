@@ -364,12 +364,14 @@ void clearLCD(){
 
 void backlightOn(){  //turns on the backlight
     Serial.write(0x7C);   //command flag for backlight stuff
+    delay(10);
     Serial.write(157);    //light level.   
     delay(10);
 }
 
 void backlightOff(){  //turns off the backlight
     Serial.write(0x7C);   //command flag for backlight stuff
+    delay(10);
     Serial.write(128);     //light level for off.  
     delay(10); 
 }
@@ -380,6 +382,7 @@ void backlightFadeOn() {
   for (int i=0; i < steps; i++)
   {
     Serial.write(0x7C);
+    delay(10);
     Serial.write(128+i);
     delay(5);
   }
@@ -392,6 +395,7 @@ void backlightFadeOff() {
   for (int i=0; i < steps; i++)
   {
     Serial.write(0x7C);
+    delay(10);
     Serial.write(157-i);
     delay(50);
   }
