@@ -56,11 +56,11 @@ int state=0;
 
 //Define the user configurable settings
 volatile byte volume=63; //Start at 100% Volume
-volatile int frequency=9170; //Start at 100.3MHz
+volatile int frequency=9110; //Start at 100.3MHz
 //volatile int frequency=8850; //Start at 100.3MHz
 //volatile int frequency=980; //Start at 980 kHz
 volatile int oldfrequency, oldfrequencyAM = 980;
-volatile int oldfrequencyFM = 9170;
+volatile int oldfrequencyFM = 9110;
 
 unsigned long oldfrequencyT, dwellT, backlightT, backlightdwellT, currentT;
 
@@ -88,13 +88,13 @@ void setup()
 {
 	//Create a serial connection
 	Serial.begin(9600);
+        delay(50);
         pinMode(2, INPUT);
         digitalWrite(2, HIGH);                // Turn on internal pullup resistor
         pinMode(3, INPUT);
         digitalWrite(3, HIGH);                // Turn on internal pullup resistor
         attachInterrupt(0, isr_2, FALLING);   // Call isr_2 when digital pin 2 goes LOW
         attachInterrupt(1, isr_3, FALLING);   // Call isr_3 when digital pin 3 goes LOW
-        
         pinMode(PB, INPUT);
         
         dwellT = 400;            // time to wait before trying to tune to new frequency and after knob has been turned
@@ -106,8 +106,6 @@ void setup()
         backlight = true;
 	delay(500);
 	goTo(0);
-//	Serial.print("-=ArduinoRadio=-");
-//	showFREQ();
 
         //Configure the radio
 	radio.begin(mode);
@@ -117,7 +115,7 @@ void setup()
 
 	lastUpdate = millis();
         backlightT = lastUpdate;
-	radioText_pos = 0;
+//	radioText_pos = 0;
         delay(10);
         showFREQ();
         for (int i=0; i<RDBSattempts; i++) { 
@@ -424,13 +422,20 @@ void isr_2(){                                              // Pin2 went LOW
     }  
     if(digitalRead(3) == LOW && halfleft == true){         // <--
       halfleft = false;      // One whole click counter-
-      if (mode==FM) {
-        if (frequency <= 8750) { frequency = 10810; }
-        frequency-=20;                                            // clockwise
+      if (backlight) {
+              if (mode==FM) {
+                if (frequency <= 8750) { frequency = 10810; }
+                frequency-=20;                                            // clockwise
+              }
+              else { 
+                if (frequency <= 550) { frequency = 1760; }
+                frequency-=10;
+              }
       }
-      else { 
-        if (frequency <= 550) { frequency = 1760; }
-        frequency-=10;
+      else {
+        backlightOn();
+        backlight = true;
+        backlightT = millis(); 
       }
     }
   }
@@ -443,13 +448,20 @@ void isr_3(){                                             // Pin3 went LOW
     }                                                     // clockwise
     if(digitalRead(2) == LOW && halfright == true){       // -->
       halfright = false;      // One whole click clockwise
-      if (mode==FM) {
-        if (frequency >= 10790) { frequency = 8730; }
-        frequency+=20;
+      if (backlight) {
+              if (mode==FM) {
+                if (frequency >= 10790) { frequency = 8730; }
+                frequency+=20;
+              }
+              else {
+                if (frequency >=1750) { frequency = 540; }
+                frequency+=10;
+              }
       }
       else {
-        if (frequency >=1750) { frequency = 540; }
-        frequency+=10;
+        backlightOn();
+        backlight = true;
+        backlightT = millis();
       }
     }
   }
