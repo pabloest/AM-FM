@@ -45,6 +45,7 @@ Station tuned;
 #define EncA 3 //Encoder A
 #define EncB 2 //Encoder B
 #define PB 5 //Pushbutton
+#define LED 6
 
 // Instantiate a Bounce object with a 5 millisecond debounce time
 Bounce bouncer = Bounce(PB, 10); 
@@ -57,8 +58,6 @@ int state=0;
 //Define the user configurable settings
 volatile byte volume=63; //Start at 100% Volume
 volatile int frequency=9110; //Start at 100.3MHz
-//volatile int frequency=8850; //Start at 100.3MHz
-//volatile int frequency=980; //Start at 980 kHz
 volatile int oldfrequency, oldfrequencyAM = 980;
 volatile int oldfrequencyFM = 9110;
 
@@ -72,7 +71,6 @@ bool ps_rdy;
 char ps_prev[9]; //previous ps
 char pty_prev[17]="                ";
 byte mode=FM; //mode 0 is FM, mode 1 is AM
-//byte mode=AM; //mode 0 is FM, mode 1 is AM
 int RDBSattempts = 3;
 
 unsigned long lastUpdate; //Scrolling Refresh Parameter
@@ -85,10 +83,7 @@ bool backlight;
 //                              SETUP
 //#####################################################################
 void setup()
-{
-	//Create a serial connection
-	Serial.begin(9600);
-        delay(50);
+{ 
         pinMode(2, INPUT);
         digitalWrite(2, HIGH);                // Turn on internal pullup resistor
         pinMode(3, INPUT);
@@ -100,22 +95,28 @@ void setup()
         dwellT = 400;            // time to wait before trying to tune to new frequency and after knob has been turned
         backlightdwellT = 10000; // LCD backlight dims after 10 seconds of inactivity
         oldfrequencyT = 0;
-
+        
+        delay(250);
+        Serial.begin(9600);
+        delay(50);
 	//Setup the LCD display and print the initial settings
 	backlightOn();
         backlight = true;
-	delay(500);
+	delay(100);
 	goTo(0);
+        Serial.print("Initializing...");
+        delay(200);
 
         //Configure the radio
 	radio.begin(mode);
+        delay(50);
         radio.setLocale(NA); //Use the North American PTY Lookup Table
 	radio.tuneFrequency(frequency);
 	volume=radio.setVolume(volume);
 
 	lastUpdate = millis();
         backlightT = lastUpdate;
-//	radioText_pos = 0;
+	radioText_pos = 0;
         delay(10);
         showFREQ();
         for (int i=0; i<RDBSattempts; i++) { 
@@ -263,7 +264,6 @@ void showCALLSIGN(){
       Serial.print(Stationcall);
       Serial.print("   ");
   }
-//  else Serial.print("                ");
 }
 
 //----------------------------------------------------------------------
