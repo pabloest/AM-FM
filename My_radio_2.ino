@@ -56,9 +56,9 @@ bool update=true;
 int state=0;
 
 //Define the user configurable settings
-volatile byte volume=63; //Start at 100% Volume
+volatile byte volume=56; //Start at 100% Volume
 volatile int frequency=9110; //Start at 100.3MHz
-volatile int oldfrequency, oldfrequencyAM = 980;
+volatile int oldfrequency, oldfrequencyAM = 1050;
 volatile int oldfrequencyFM = 9110;
 
 unsigned long oldfrequencyT, dwellT, backlightT, backlightdwellT, currentT;
@@ -315,6 +315,7 @@ void switchBand() {
   radio.begin(mode);	
   delay(100);
   radio.tuneFrequency(frequency);
+  volume=radio.setVolume(volume);
 }
 
 int debounce(int signal, int debounceTime){
