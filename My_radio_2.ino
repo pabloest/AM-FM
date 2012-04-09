@@ -56,7 +56,7 @@ bool update=true;
 int state=0;
 
 //Define the user configurable settings
-volatile byte volume=56; //Start at 100% Volume
+volatile byte volume=62; //Start at 100% Volume
 volatile int frequency=9110; //Start at 100.3MHz
 volatile int oldfrequency, oldfrequencyAM = 1050;
 volatile int oldfrequencyFM = 9110;
